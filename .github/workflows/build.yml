@@ -46,3 +46,23 @@ jobs:
       with:
         name: dolphin-bin-macos-x64
         path: ./build/Binaries/Dolphin.dmg
+
+  build-windows:
+    runs-on: windows-2022
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: "recursive"
+    
+    - name: msbuild
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: build
+      run: msbuild -v:m -m -p:Platform=x64,Configuration=Release Source\dolphin-emu.sln
+    
+    - name: upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: dolphin-windows-x64
+        path: Binary\x64
