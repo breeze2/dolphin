@@ -1,0 +1,69 @@
+name: Build
+on: 
+  push:
+    branches:
+      - actions
+      - build-win
+
+jobs:
+  # build-macos:
+  #   runs-on: macos-10.15
+  #   steps:
+  #   - name: checkout
+  #     uses: actions/checkout@v3
+  #     with:
+  #       submodules: "recursive"
+        
+  #   - name: init
+  #     run: |
+  #       brew install cmake ninja qt
+
+  #   - name: cmake
+  #     run: |
+  #       export PATH="$(brew --prefix)/opt/qt/bin:$PATH"
+  #       mkdir build
+  #       cd build
+  #       cmake .. -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -G Ninja
+        
+  #   - name: build
+  #     run: |
+  #       export PATH="$(brew --prefix)/opt/qt/bin:$PATH"
+  #       cd build
+  #       ninja -j $(sysctl -n hw.logicalcpu)
+    
+  #   - name: artifact
+  #     run: |
+  #       cd build
+  #       mkdir ./Binaries/Dolphin_app
+  #       mv ./Binaries/Dolphin.app ./Binaries/Dolphin_app/Dolphin.app
+  #       chmod a+x ./Binaries/Dolphin_app/Dolphin.app/Contents/MacOS/Dolphin
+  #       ln -s /Applications ./Binaries/Dolphin_app/Applications
+  #       hdiutil create ./Binaries/tmp.dmg -ov -volname Dolphin -fs HFS+ -srcfolder ./Binaries/Dolphin_app
+  #       hdiutil convert ./Binaries/tmp.dmg -format UDZO -o ./Binaries/Dolphin.dmg
+  #       rm ./Binaries/tmp.dmg
+              
+  #   - name: upload
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: dolphin-bin-macos-x64.dmg
+  #       path: ./build/Binaries/Dolphin.dmg
+  
+  build-windows:
+    runs-on: windows-2022
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: "recursive"
+    
+    - name: msbuild
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: build
+      run: msbuild -v:m -m -p:Platform=x64,Configuration=Release Source\dolphin-emu.sln
+    
+    - name: upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: dolphin-windows-x64.zip
+        path: Binary\x64
