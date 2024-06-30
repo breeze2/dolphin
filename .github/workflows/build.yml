@@ -3,49 +3,51 @@ on:
   push:
     branches:
       - actions
+      - temp/actions
 
 jobs:
-  build-macos:
-    runs-on: macos-10.15
-    steps:
-    - name: checkout
-      uses: actions/checkout@v3
-      with:
-        submodules: "recursive"
-        
-    - name: init
-      run: |
-        brew install cmake ninja qt
+  # build-macos:
+  #   runs-on: macos-12
+  #   steps:
+  #   - name: checkout
+  #     uses: actions/checkout@v3
+  #     with:
+  #       submodules: "recursive"
+  #   - uses: actions/setup-python@v5
+  #     with:
+  #       python-version: '3.9'
 
-    - name: cmake
-      run: |
-        export PATH="$(brew --prefix)/opt/qt/bin:$PATH"
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -G Ninja
-        
-    - name: build
-      run: |
-        export PATH="$(brew --prefix)/opt/qt/bin:$PATH"
-        cd build
-        ninja -j $(sysctl -n hw.logicalcpu)
+  #   - name: init
+  #     run: |
+  #       brew install qt@5
+
+  #   - name: cmake build
+  #     run: |
+  #       export PATH="/usr/local/opt/qt@5/bin:$PATH"
+  #       export LDFLAGS="-L/usr/local/opt/qt@5/lib"
+  #       export CPPFLAGS="-I/usr/local/opt/qt@5/include"
+  #       export PKG_CONFIG_PATH="/usr/local/opt/qt@5/lib/pkgconfig"
+  #       mkdir build
+  #       cd build
+  #       cmake .. -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+  #       make -j $(sysctl -n hw.logicalcpu)
     
-    - name: artifact
-      run: |
-        cd build
-        mkdir ./Binaries/Dolphin_app
-        mv ./Binaries/Dolphin.app ./Binaries/Dolphin_app/Dolphin.app
-        chmod a+x ./Binaries/Dolphin_app/Dolphin.app/Contents/MacOS/Dolphin
-        ln -s /Applications ./Binaries/Dolphin_app/Applications
-        hdiutil create ./Binaries/tmp.dmg -ov -volname Dolphin -fs HFS+ -srcfolder ./Binaries/Dolphin_app
-        hdiutil convert ./Binaries/tmp.dmg -format UDZO -o ./Binaries/Dolphin.dmg
-        rm ./Binaries/tmp.dmg
+  #   - name: artifact
+  #     run: |
+  #       cd build
+  #       mkdir ./Binaries/Dolphin_app
+  #       mv ./Binaries/Dolphin.app ./Binaries/Dolphin_app/Dolphin.app
+  #       chmod a+x ./Binaries/Dolphin_app/Dolphin.app/Contents/MacOS/Dolphin
+  #       ln -s /Applications ./Binaries/Dolphin_app/Applications
+  #       hdiutil create ./Binaries/tmp.dmg -ov -volname Dolphin -fs HFS+ -srcfolder ./Binaries/Dolphin_app
+  #       hdiutil convert ./Binaries/tmp.dmg -format UDZO -o ./Binaries/Dolphin.dmg
+  #       rm ./Binaries/tmp.dmg
               
-    - name: upload
-      uses: actions/upload-artifact@v3
-      with:
-        name: dolphin-bin-macos-x64
-        path: ./build/Binaries/Dolphin.dmg
+  #   - name: upload
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: dolphin-bin-macos-x64
+  #       path: ./build/Binaries/Dolphin.dmg
 
   build-windows:
     runs-on: windows-2022
@@ -54,10 +56,15 @@ jobs:
       uses: actions/checkout@v3
       with:
         submodules: "recursive"
+    - run: |
+        cd Externals/mGBA/mgba
+        git fetch -t
+        git checkout 0.10.3
+        cd ../../../
     
     - name: msbuild
-      uses: microsoft/setup-msbuild@v1.1
-    
+      uses: microsoft/setup-msbuild@v2
+
     - name: build
       run: msbuild -v:m -m -p:Platform=x64,Configuration=Release Source\dolphin-emu.sln
     
